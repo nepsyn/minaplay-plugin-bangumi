@@ -19,7 +19,7 @@ import {
   Timeout,
   User,
   ResourceSeries, MinaPlayCommandOption, MinaPlayMessage,
-} from '@minaplay/server/dist/index.js';
+} from '@minaplay/server';
 import { CalendarItem, Subject } from './bangumi.interface.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -87,7 +87,7 @@ export class BangumiCommand {
       ]);
       try {
         const resp = await chat.receive(30000);
-        if (resp.type !== 'ConsumableFeedback' || resp.id !== groupId || resp.value !== 'yes') {
+        if (resp.type !== 'Text' || !['yes', 'y'].includes(resp.content.toLowerCase())) {
           return [new Consumed(groupId), new Text(`Add series '${name}' canceled`)];
         }
       } catch {

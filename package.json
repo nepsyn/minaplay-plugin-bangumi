@@ -1,6 +1,6 @@
 {
   "name": "minaplay-plugin-bangumi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bangumi plugin for minaplay",
   "type": "module",
   "scripts": {
@@ -26,9 +26,9 @@
     "typescript": "^5.3.3"
   },
   "peerDependencies": {
+    "@minaplay/server": "^0.1.1",
     "@nestjs/common": "^10.3.0",
     "@nestjs/typeorm": "^10.0.2",
-    "@minaplay/server": "^0.1.0",
     "commander": "^12.0.0",
     "typeorm": "^0.3.20"
   }
