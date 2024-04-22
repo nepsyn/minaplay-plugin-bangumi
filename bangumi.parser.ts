@@ -36,7 +36,7 @@ export class BangumiParser implements PluginSourceParser {
             posterUrl: item.images.common,
             count: item.total_episodes,
             pubAt: new Date(item.date),
-            tags: item.tags.map(({ name }) => name),
+            tags: (item.tags ?? []).map(({ name }) => name),
           };
         }),
       };
@@ -63,7 +63,7 @@ export class BangumiParser implements PluginSourceParser {
       posterUrl: item.images.common,
       count: item.total_episodes,
       pubAt: new Date(item.date),
-      tags: item.tags.map(({ name }) => name),
+      tags: (item.tags ?? []).map(({ name }) => name),
     };
   }
 
@@ -83,7 +83,7 @@ export class BangumiParser implements PluginSourceParser {
       posterUrl: item.images.common,
       count: item.total_episodes,
       pubAt: new Date(item.date),
-      tags: item.tags.map(({ name }) => name),
+      tags: (item.tags ?? []).map(({ name }) => name),
     }));
   }
 }
