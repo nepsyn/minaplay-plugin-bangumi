@@ -1,19 +1,12 @@
 import {
   MinaPlayPluginParser,
-  MinaPlayPluginSourceCalendarDay,
   PluginSourceParser,
 } from '@minaplay/server';
 import { CalendarItem, Subject } from './bangumi.interface.js';
 
 @MinaPlayPluginParser()
 export class BangumiParser implements PluginSourceParser {
-  private cachedCalendar: MinaPlayPluginSourceCalendarDay[] = undefined;
-
   async getCalendar() {
-    if (this.cachedCalendar) {
-      return this.cachedCalendar;
-    }
-
     const response = await fetch(`https://api.bgm.tv/calendar`, {
       headers: {
         'User-Agent': 'nepsyn/minaplay-plugin-bangumi',
@@ -21,7 +14,7 @@ export class BangumiParser implements PluginSourceParser {
     });
 
     let data: CalendarItem[] = await response.json();
-    this.cachedCalendar = data.map(({ weekday, items }) => {
+    return data.map(({ weekday, items }) => {
       return {
         weekday: weekday.id % 7 as any,
         items: items.filter(({ type }) => type === 2).map((item) => {
@@ -37,7 +30,6 @@ export class BangumiParser implements PluginSourceParser {
         }),
       };
     });
-    return this.cachedCalendar;
   }
 
   async getSeriesById(id: string) {
