@@ -9,10 +9,6 @@ import { CalendarItem, Subject } from './bangumi.interface.js';
 export class BangumiParser implements PluginSourceParser {
   private cachedCalendar: MinaPlayPluginSourceCalendarDay[] = undefined;
 
-  private get cachedCalendarSeries() {
-    return this.cachedCalendar ? this.cachedCalendar.flatMap(({ items }) => items) : [];
-  }
-
   async getCalendar() {
     if (this.cachedCalendar) {
       return this.cachedCalendar;
@@ -45,11 +41,6 @@ export class BangumiParser implements PluginSourceParser {
   }
 
   async getSeriesById(id: string) {
-    const cached = this.cachedCalendarSeries.find((series) => String(series.id) === id);
-    if (cached) {
-      return cached;
-    }
-
     const response = await fetch(`https://api.bgm.tv/v0/subjects/${id}`, {
       headers: {
         'User-Agent': 'nepsyn/minaplay-plugin-bangumi',
