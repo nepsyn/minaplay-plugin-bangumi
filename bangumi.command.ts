@@ -26,16 +26,27 @@ import { Repository } from 'typeorm';
 import fs from 'node:fs';
 import path from 'node:path';
 import { generateMD5 } from '@minaplay/server/dist/utils/generate-md5.util.js';
+import fetch from 'node-fetch';
+import { ConfigService } from '@nestjs/config';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import process from 'node:process';
 
 @Injectable()
 export class BangumiCommand {
+  agent?: HttpsProxyAgent<string>;
+
   constructor(
     @InjectRepository(Series) private seriesRepository: Repository<Series>,
     @InjectRepository(SeriesTag)
     private seriesTagRepository: Repository<SeriesTag>,
     @InjectRepository(File)
     private fileRepository: Repository<File>,
+    configService: ConfigService,
   ) {
+    const proxy = configService.get('APP_HTTP_PROXY') || process.env.HTTP_PROXY;
+    if (proxy) {
+      this.agent = new HttpsProxyAgent(proxy);
+    }
   }
 
   @MinaPlayCommand('bangumi', {
@@ -61,6 +72,7 @@ export class BangumiCommand {
     const groupId = Date.now().toString();
     try {
       const response = await fetch(`https://api.bgm.tv/v0/subjects/${id}`, {
+        agent: this.agent,
         headers: {
           'User-Agent': 'nepsyn/minaplay-plugin-bangumi',
         },
@@ -69,7 +81,7 @@ export class BangumiCommand {
         return new Text(`Bangumi subject '${id}' not found`, Text.Colors.ERROR);
       }
 
-      const data: Subject = await response.json();
+      const data = await response.json() as Subject;
       if (data.type !== 2) {
         return new Text(`Bangumi subject '${id}' not found`, Text.Colors.ERROR);
       }
@@ -100,7 +112,7 @@ export class BangumiCommand {
       const tags = (data.tags ?? []).map(({ name }) => ({ name }));
       await this.seriesTagRepository.save(tags);
       const ext = path.extname(data.images.common);
-      const imageResp = await fetch(data.images.common);
+      const imageResp = await fetch(data.images.common, { agent: this.agent });
       const imageData = Buffer.from(await imageResp.arrayBuffer());
       const filepath = path.join(USER_UPLOAD_IMAGE_DIR, `${await generateMD5(data.images.common)}${ext}`);
       await fs.promises.writeFile(filepath, imageData);
@@ -145,6 +157,7 @@ export class BangumiCommand {
     }) all: boolean,
   ) {
     const response = await fetch(`https://api.bgm.tv/calendar`, {
+      agent: this.agent,
       headers: {
         'User-Agent': 'nepsyn/minaplay-plugin-bangumi',
       },
@@ -153,7 +166,7 @@ export class BangumiCommand {
       return new Text(`Fetch Bangumi calendar failed`, Text.Colors.ERROR);
     }
 
-    let data: CalendarItem[] = await response.json();
+    let data = await response.json() as CalendarItem[];
     if (!all) {
       const now = new Date();
       data = data.filter(({ weekday }) => now.getDay() === weekday.id % 7);
@@ -187,6 +200,7 @@ export class BangumiCommand {
     @MinaPlayListenerInject() chat: PluginChat,
   ) {
     const response = await fetch(`https://api.bgm.tv/search/subject/${encodeURIComponent(keyword)}?type=2&responseGroup=small`, {
+      agent: this.agent,
       headers: {
         'User-Agent': 'nepsyn/minaplay-plugin-bangumi',
       },
@@ -195,13 +209,13 @@ export class BangumiCommand {
       return new Text(`Cannot find subjects by keyword: ${keyword}`, Text.Colors.ERROR);
     }
 
-    let data: { results: number; list: Subject[] } = await response.json();
+    let data = await response.json() as { results: number; list: Subject[] };
     if (data.results === 0) {
       return new Text(`Cannot find subjects by keyword: ${keyword}`, Text.Colors.ERROR);
     }
 
     const messages: MinaPlayMessage[] = [
-      new Text(`Search results for keyword: ${keyword} , total ${data.results} items\n`, Text.Colors.INFO)
+      new Text(`Search results for keyword: ${keyword} , total ${data.results} items\n`, Text.Colors.INFO),
     ];
     for (const subject of data.list) {
       messages.push(new Text(`${subject.name_cn || subject.name}\t${subject.id}`));

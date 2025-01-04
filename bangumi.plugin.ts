@@ -8,8 +8,8 @@ const icon = 'data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAI
 @MinaPlayPlugin({
   id: 'bangumi',
   icon,
-  version: '1.0.2',
-  supportVersion: '0.2.0',
+  version: '1.0.3',
+  supportVersion: '^0.2.0',
   description: 'Bangumi support in MinaPlay',
   author: 'MinaPlay',
   repo: 'https://github.com/nepsyn/minaplay-plugin-bangumi',
